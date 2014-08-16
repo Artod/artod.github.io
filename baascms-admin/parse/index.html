@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>BaasCMS admin panel</title>
+		
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" />
+
+		<style type="text/css">
+			#categories ul, #categories li{
+				list-style: none; padding: 0px; margin: 0px;
+			}
+			
+			#categories ul ul{
+				padding: 0px 0px 0px 20px;				
+			}
+			
+			#categories li{
+				padding: 5px 0px 5px 0px;
+			}
+
+			#categories li.active > span{
+				font-weight:bold;
+			}		
+
+			#main .glyphicon  {
+				font-size:30px;
+				padding: 0px 8px 0px 8px;
+			}
+			
+			#main .glyphicon-sort-by-attributes, #main .glyphicon-sort-by-attributes-alt  {
+				font-size:inherit;
+			}
+		</style>
+		
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.3/underscore.string.min.js"></script>
+		<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/path.js/0.8.4/path.min.js"></script>
+		
+		<script src="//www.parsecdn.com/js/parse-1.2.19.min.js"></script>		
+		
+		<script src="baascms.js"></script>
+		<script src="baascms-adapter-parse.js"></script>	
+		
+		<script src="../baascms-admin.js"></script>
+		
+		<script src="//www.google.com/jsapi?key=AIzaSyB-eOMMlzO0Wet2KL8r3qbKEhdLw4ORYe0"></script>
+		<script src="//apis.google.com/js/client.js"></script>
+	</head>	
+	
+    <body>
+
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<a class="navbar-brand" href="#">BaasCMS</a>
+				</div>
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#/baascms/users">Users</a></li>
+						<li><a href="#/baascms/patterns">Patterns</a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>	
+
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-3" style="padding-top:50px;">
+					<div class="panel panel-default">
+						<div class="panel-heading">Categories <a href="#/baascms/category/add">new+</a></div>
+						<div class="panel-body" id="categories"></div>
+					</div>
+				</div>
+				<div id="main" class="col-sm-8 col-sm-offset-1"></div>
+			</div>
+		</div>	
+		
+		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>		
+		
+		<script id="template-baascms-home" type="text/template">
+			<div class="page-header">
+				<h1>BaasCMS</h1>
+			</div>
+			<p>Start working with BaasCMS (Parse.com version) by following these steps:</p>
+			<ul>
+				<li>Sign up for <a href="https://www.parse.com/#signup" target="_blank">Parse.com</a></li>
+				<li>Create <a href="https://www.parse.com/apps/new" target="_blank">new app</a>.</li>
+				<li>Copy <i>Application ID</i> and <i>Javascript Key</i> and paste them into this form:
+					<p>
+						<form>
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-3">
+										<label>Application ID:</label>
+										<input class="form-control" name="appid" placeholder="Application ID" type="text" />
+									</div>
+									<div class="col-xs-3">
+										<label>Javascript Key:</label>
+										<input class="form-control" name="jskey" placeholder="Javascript Key" type="text" />
+									</div>
+									<div class="col-xs-2">
+										<label>&nbsp;</label>
+										<button class="btn btn-primary">Save and Try</button>
+									</div>
+								</div>
+							</div>			
+						</form>
+					</p>
+				</li>
+			</ul>
+		</script>
+		
+		<script id="template-baascms-items-wrap" type="text/template">
+			<div class="page-header">
+				<h1><%= _.str.humanize(pattern.name) %></h1>
+			</div>
+			
+			<p class="text-right"><a href="#/baascms/category/<%= data.category.id %>/item/add">Add new item +</a></p>
+			
+			<table class="table table-condensed table-hover">
+				<thead>
+					<tr>
+						<% _.each(pattern.pattern, function(field) { %>
+							<% if ( field && !{"textarea": 1, "hidden": 1}[field.type] ) { %>
+								<th><a href="#/baascms/category/<%= data.category.id %>/page/<%= data.page %>/sort/<%= 
+									_.str.ltrim(opts.sort, "-") !== field.name
+										? field.name
+										: (opts.sort === field.name ? "-" + field.name : field.name)
+									%>"><%= _.str.humanize(field.name)%><%= _.str.ltrim(opts.sort, "-") !== field.name
+										? ""
+										: " <span class='glyphicon glyphicon-sort-by-attributes" + (opts.sort === field.name ? "" : "-alt") + "'></span>" %></a></th>
+							<% } %>
+						<% }) %>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody id="category-<%= data.category.id %>-items">
+					<%= htmlElements %>
+				</tbody>
+			</table>			
+
+			<% if (data.pages > 1) { %>
+				<ul class="pagination">	
+					<% for (var i = 1; data.pages >= i; i++) { %>
+						<li<%= data.page == i ? " class='active'" : "" %>>
+							<a href="#/baascms/category/<%= data.category.id %>/page/<%= i %>/sort/<%= opts.sort %>"><%= i %></a>
+						</li>
+					<% } %>
+				</ul>
+			<% } %>
+		</script>
+		
+		<script id="template-baascms-items-element" type="text/template">
+			<tr id="item<%= _.str.dasherize(pattern.name) %>-<%= item.id %>">			
+				<% _.each(pattern.pattern, function(field) { %>
+					<% if ( field && !{"textarea": 1, "hidden": 1}[field.type] ) { %>
+						<td>
+							<% if ( {"google drive image": 1}[field.type] && item[field.name] ) { %>						
+								<img src="<%= item[field.name] %>" width="50px" alt="" />								
+							<% } else  if ( {"google drive file": 1}[field.type] && item[field.name] ) { %>
+								<a href="<%= item[field.name] %>">Link</a>
+							<% } else { %>								
+								<%= item[field.name] %>								
+							<% } %>
+						</td>
+					<% } %>
+				<% }) %>				
+				<td>
+					<a href="#/baascms/category/<%= item.category_id %>/item/edit/<%= item.id %>">edit</a>
+					<a href="#" data-marker="delete" data-id="<%= item.id %>">delete</a>
+				</td>
+			</tr>
+		</script>
+		
+		<script id="template-baascms-category-index" type="text/template">			
+			<ul>
+				<%= htmlCategories %>
+			</ul>
+		</script>
+
+		<script id="template-baascms-category-element" type="text/template">
+			<li id="category-<%= category.id %>"<%= currentCID === category.id ? " class='active'" : "" %>>
+				<span>
+					<% if (category.pattern_name) { %>
+						<a href="#/baascms/category/<%= category.id %>"><%= category.name %></a>
+					<% } else { %>
+						<%= category.name %>
+					<% } %>
+					<%= category.count || category.count == 0 ? "(" + category.count + ")" : "" %>
+				</span>
+				<a href="#/baascms/category/edit/<%= category.id %>"><span class="glyphicon glyphicon-pencil" style="color:#4CAE4C;"></span></a>
+				<a href="#" data-marker="delete" data-id="<%= category.id %>"><span class="glyphicon glyphicon-remove" style="color:#F0AD4E;"></span></a>
+				<%= htmlSubcats %>
+			</li>		
+		
+		</script>
+
+		<script id="template-baascms-pattern-new-field" type="text/template">
+			<div class="form-group">
+				<div class="row">
+					<div class="col-xs-3">
+						<label>Field name</label>
+						<input class="form-control" type="text" value="<%= (data.name ? data.name : "") %>" placeholder="Field name" data-marker="field-name" />
+						<span class="help-block">Latin, numbers or '_'.</b></span>
+					</div>
+					<div class="col-xs-3">
+						<label>Field type</label>
+						<select class="form-control" data-marker="field-type">
+							<% _.each(types, function(type) { %>
+								<option value="<%= type %>"<%= data.type === type ? " selected" : "" %>><%= type %></option>
+							<% }); %>
+						</select>
+					</div>
+					<div class="col-xs-5<%= (data.type === "select" ? "" : " hidden") %>">
+						<label>Options</label>
+						<input class="form-control" type="text" value="<%= (data.options ? data.options : "") %>" placeholder="Options" data-marker="field-options" />
+						<span class="help-block">divided by <b>";"</b></span>
+					</div>
+					<div class="col-xs-1" style="padding-top:32px;">
+						<a href="#" data-marker="delete-field">delete</span></a>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script id="template-baascms-pattern-form" type="text/template">
+			<div class="page-header">
+				<h1><%= header %></h1>
+			</div>
+			<form>
+				<input type="hidden" name="id" value="<%= (data.id ? data.id : "") %>" />
+
+				<div class="form-group">
+					<label for="text-name">Pattern name</label>
+					<% if (data.name) { %>
+						<p class="form-control-static"><%= data.name %></p>
+						<input id="text-name" type="hidden" name="name" value="<%= data.name %>" />
+					<% } else { %>
+						<input id="text-name" class="form-control" type="text" name="name" value="" placeholder="name" />
+						<span class="help-block">Latin letters or numbers.</b></span>
+					<% } %>						
+				</div>
+
+				<div id="pattern-fields">
+					<% if (!data.pattern) data.pattern = [{}]; %>
+					<% var template = $("#template-baascms-pattern-new-field").html(); %>
+					<% _.each(data.pattern, function(field) { %>
+						<%= _.template(template, {
+							data: field,
+							types: types
+						}) %>
+					<% }) %>
+				</div>
+
+				<div class="form-group">
+					<a id="add-new-field" href="#">Add new field +</a>
+				</div>
+
+				<button class="btn btn-primary"><%= button %></button>
+			</form>
+		</script>
+
+		<script id="template-baascms-patterns" type="text/template">
+			<div class="page-header">
+				<h1>Patterns</h1>
+			</div>
+			
+			<p class="text-right"><a href="#/baascms/pattern/add">Add new pattern +</a></p>
+			
+			<table class="table table-condensed table-hover">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% _.each(data, function(el) { %>
+						<tr id="pattern-<%= el.id %>">
+							<td><%= el.name %></td>
+							<td>
+								<a href="#/baascms/pattern/edit/<%= el.id %>">edit</a>
+								<a href="#" data-marker="delete" data-id="<%= el.id %>">delete</a>
+							</td>
+						</tr>
+					<% }) %>
+				</tbody>
+			</table>			
+		</script>
+		
+		<script id="template-baascms-form" type="text/template">
+			<div class="page-header">
+				<h1><%= header %></h1>
+			</div>
+			<form>
+				<%= form %>
+				<button class="btn btn-primary"><%= button %></button>
+			</form>
+		</script>
+
+		<script id="template-baascms-form-element" type="text/template">
+			<% if (type === "checkbox") { %>
+				<div class="checkbox">
+					<label>
+						<input id="<%= id %>" name="<%= name %>" type="checkbox"  value="1" <%= value ? "checked='checked' " : "" %>/> <%= _.str.humanize(name) %>						
+					</label>
+				</div>
+			<% } else if (type === "hidden") { %>
+				<input id="<%= id %>" name="<%= name %>" type="hidden" value="<%= value %>" />
+			<% } else { %>
+				<div class="form-group">
+					<label for="<%= type %>-<%= _.str.dasherize(name) %>"><%= _.str.humanize(name) %></label>
+					
+					<% switch(type) { case "text": case "number": %>
+							<input id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>" type="<%= type %>" value="<%= value %>"<%= type === "number" ? "step='any'" : "" %> />
+
+						<% break; case "google drive image": case "google drive file": %>
+							<p class="form-control-static">
+								<% if (type === "google drive image") { %>
+									<a href="<%= value %>" <%= value ? "" : " style='display:none;'" %> data-marker="google-drive-result" target="_blank">
+										<img width="50px" src="<%= value %>" />
+									</a>
+								<% } else { %>
+									<a href="<%= value %>" <%= value ? "" : " style='display:none;'" %> data-marker="google-drive-result" target="_blank">Link</a> 
+								<% } %>
+								
+								<input id="<%= id %>" name="<%= name %>" type="hidden" value="<%= value %>" />
+								
+								<a href="#" data-marker="gdrive-picker" data-type="<%= (type === "google drive image" ? "img" : "file") %>" title="Open Google Drive">
+									<span class="glyphicon glyphicon-folder-open" style="color:#4CAE4C;"></span>
+								</a>
+								
+								<a href="#"<%= value ? "" : " style='display:none;'" %> data-marker="google-drive-delete">delete</a>
+							</p>
+						<% break; case "textarea": %>
+							<textarea id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>"><%= value %></textarea>
+							
+						<% break; case "select": %>
+							<select id="<%= id %>" name="<%= name %>" class="form-control">							
+								<% _.each(options, function(option) { %>
+									<% option = _.isString(option) ? option.split(",") : option %>
+									<option value="<%= option[0] %>"<%= option[0] == value ? " selected='selected'" : "" %>><%= option[1] %></option>									
+								<% }) %>							
+							</select>
+							
+					<% break; } %>
+				</div>
+			<% } %>
+		</script>
+		
+		
+		
+		
+		
+		
+		<script id="template-baascms-category" type="text/template">		
+			<h1><%= category.name %></h1>
+			
+			<% if (children.length) { %>
+				<ul class="list-inline">
+					<% _.each(children, function(child) { %>
+						<li>
+							<a href="#/baascms/category/<%= child.id %>"><%= child.name %></a>
+						</li>
+					<% }) %>
+				</ul>
+			<% } %>
+			
+			<img src="<%= category.icon %>" alt="" />
+			
+			<%= category.body %>		
+		</script>	
+
+
+		
+    </body>
+</html>
+
+
+
+<!-- 
+
+
+								<<%= "script" %>>
+									;(function(Dropbox, $) {
+										var $input = $("#<%= id %>"),
+											$img = $input.prev(),
+											$del = $input.next();
+											
+										$del.on('click', function() {
+											$input.val('');
+											$img.hide();
+											$del.hide();
+											return false;
+										});
+										
+										$input.after(typeof Dropbox !== "undefined"
+											? Dropbox.createChooseButton({
+												success: function(files) {
+													$input.val(files[0].link);
+													$img.show().attr("src", files[0].link);
+													$del.show();
+												},
+												linkType: "direct"
+											})
+											: "Requires Dropbox API file."
+										);
+									})(window.Dropbox, window.jQuery);
+								</<%= "script" %>>
+								
+								
+		<script src="//code.jquery.com/qunit/qunit-1.14.0.js"></script>
+		
+		
+				$(function() {
+					//BaasCMS.Widgets.categories.init();
+					//BaasCMS.Widgets.main.init();
+				});
+				
+		<script>
+		//<div id="qunit"></div><div id="qunit-fixture"></div>
+			;(function(root) {
+				return;
+				module('BaasCMS.Adapter');
+				test('Creating new Adapter', function() {
+					expect(4);
+
+					var adapter1 = new BaasCMS.Adapter((function() {
+						function Test() {};
+
+						Test.prototype = {
+							getAllCategories: function() { return 1; }
+						};
+
+						return Test;
+					})());
+
+					ok(adapter1.getAllCategories() === 1, 'Adapter1 should be created');
+
+					var adapter2 = new BaasCMS.Adapter((function() {
+						function Test() {};
+
+						Test.prototype = {
+							getAllCategories: function() { return 2; }
+						};
+
+						return Test;
+					})());
+
+					ok(adapter2.getAllCategories() === 2, 'Adapter2 should be created');
+					ok(adapter1.getAllCategories() === 1, 'Adapter1 should be worked');
+
+					var adapter3 = new BaasCMS.Adapter();
+					ok(adapter3.getAllCategories() === 'Adapter does not support this method', 'Default methods for adapter3 with empty engine should return error message.');
+				});
+			})(this);
+		</script>
+
+
+				/*_.extend(BaasCMS.EventDispatcher, {
+					'click:model-delete': function(e, $this) {
+						var id = $this.data('id'),
+							model = $this.data('model');
+
+						BaasCMS.adapter.del(model, id).done(function(data) {
+							$('#' + _.str.trim( _.str.dasherize(model), '-' ) + '-' + id).fadeOut(function() {
+								$(this).remove();
+							});
+						});
+
+						return false;
+					}
+				});*/
+
+				/*
+				(function() {
+					BaasCMS.router('/templates', function() {
+						BaasCMS.adapter.getAll('Template').done(function(data) {
+							BaasCMS.Widgets.main.$el.html( _.template($('#template-templates').html(), {data: data}) );
+						});
+					});
+
+					BaasCMS.router('/template/add', function() {
+						BaasCMS.Widgets.main.$el.html( _.template($('#template-form').html(), {
+							header: 'Add template',
+							button: 'Create',
+							form: BaasCMS.Admin.generateForm([{
+								name: 'name',
+								type: 'text'
+							}, {
+								name: 'body',
+								type: 'textarea'
+							}])
+						}) );
+
+						var $form = BaasCMS.Widgets.main.$el.find('form');
+
+						$form.on('submit', function() {
+							var data = BaasCMS.Admin.collectDataForm($form);
+							BaasCMS.adapter.save('Template', data).done(function(data) {
+
+							});
+
+							return false;
+						});
+					});
+
+					BaasCMS.router('/template/edit/:id', function(id) {
+						BaasCMS.adapter.getById('Template', id).done(function(data) {
+							BaasCMS.Widgets.main.$el.html( _.template($('#template-form').html(), {
+								header: 'Edit template',
+								button: 'Update',
+								form: BaasCMS.Admin.generateForm(data, [{
+									name: 'name',
+									type: 'text'
+								}, {
+									name: 'body',
+									type: 'textarea'
+								}])
+							}) );
+
+							var $form = BaasCMS.Widgets.main.$el.find('form');
+
+							$form.on('submit', function() {
+								var data = BaasCMS.Admin.collectDataForm($form);
+								data.id = id;
+								BaasCMS.adapter.save('Template', data).done(function(object) {
+
+								});
+
+								return false;
+							});
+						});
+					});
+				})();
+				
+				
+				
+		<script id="template-categories" type="text/template">
+			<div class="page-header">
+				<h1>Categories</h1>
+			</div>
+			<table class="table table-condensed table-hover">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% _.each(data, function(el) { %>
+						<tr id="category-<%= el.id %>">
+							<td><%= el.name %></td>
+							<td>
+								<a href="#/baascms/category/edit/<%= el.id %>">edit</a>
+								<a href="#" data-event="click:model-delete" data-id="<%= el.id %>" data-model="Category">delete</a>
+							</td>
+						</tr>
+					<% }) %>
+				</tbody>
+			</table>
+			<a href="#/baascms/category/add">Add new category +</a>
+		</script>
+
+		<script id="template-templates" type="text/template">
+			<div class="page-header">
+				<h1>Templates</h1>
+			</div>
+			<table class="table table-condensed table-hover">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% _.each(data, function(el) { %>
+						<tr id="template-<%= el.id %>">
+							<td><%= el.name %></td>
+							<td>
+								<a href="#/baascms/template/edit/<%= el.id %>">edit</a>
+								<a href="#" data-event="click:model-delete" data-id="<%= el.id %>" data-model="Template">delete</a>
+							</td>
+						</tr>
+					<% }) %>
+				</tbody>
+			</table>
+			<a href="#/baascms/template/add">Add new template +</a>
+		</script>
+		
+				*/
+
+
+ -->
