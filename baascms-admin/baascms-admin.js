@@ -1,3 +1,8 @@
+/*
+ * BaasCMS admin panel app
+ * Copyright (c) 2014 Artod gartod@gmail.com
+*/
+
 ;(function(window, document, _, $, undefined) {
     var appid = BaasCMS.cookie.get('appid'),
         jskey = BaasCMS.cookie.get('jskey');
@@ -11,7 +16,7 @@
         return;
     }
     
-    Parse.initialize(appid, jskey); // Parse.initialize("mAqjt3qNd6vhbEnBfwu3Gf46UMKbD8F2mFbCxcjg", "bCf16V5coZl5AxFEmSbdno3kZ9yvZwGIrjaHof0b");
+    Parse.initialize(appid, jskey);
     
     BaasCMS.init({
         baas: 'Parse'
