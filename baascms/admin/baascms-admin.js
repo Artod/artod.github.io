@@ -1,5 +1,5 @@
 /*
- * BaasCMS admin panel app
+ * BaasCMS admin panel
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
 
@@ -9,26 +9,48 @@
 
     if (!appid || !jskey) {
         $(function() {
-            $('#main').html( _.template( $('#template-baascms-home').html(), {} ) );
-            afterHome( $('#main').find('form') );
+            initMainPage();
         });
         
         return;
     }
-    
+
     Parse.initialize(appid, jskey);
-    
+
     BaasCMS.init({
         baas: 'Parse'
     });
+
+    if ( !Parse.User.current() ) {
+        $(function() {
+            initMainPage();
+        });
+    } else {    
+        $(function() {
+            $('#logged-in').html('Logged in as <strong>' + Parse.User.current().get('username') + '</strong> <a href="#" data-marker="logout" title="Log out"><span class="glyphicon glyphicon-log-out"></span></a>');
+            
+            $(document).on('click', 'a[data-marker="logout"]', function() {
+                Parse.User.logOut();
+                window.location.reload();
+                
+                return false;
+            });
+        });
+    }
     
-    function afterHome($form) {
+    function initMainPage() {
+        var $context = $('#main');
+        
+        $context.html( _.template( $('#template-baascms-home').html(), {} ) ); 
+    
+        var $formKeys = $context.find('form:eq(0)');    
+    
         var appid = BaasCMS.cookie.get('appid'),
             jskey = BaasCMS.cookie.get('jskey'),
-            $appid = $form.find('input[name="appid"]').val(appid),
-            $jskey = $form.find('input[name="jskey"]').val(jskey);
+            $appid = $formKeys.find('input[name="appid"]').val(appid),
+            $jskey = $formKeys.find('input[name="jskey"]').val(jskey);
 
-        $form.on('submit', function() {
+        $formKeys.on('submit', function() {
             var appid = $appid.val(),
                 jskey = $jskey.val();
 
@@ -40,7 +62,148 @@
             
             return false
         });
-    };
+        
+        
+        var $formSignUp = $context.find('form:eq(1)');
+        
+        $formSignUp.on('submit', function() {
+            var $form = $(this),
+                $login = $form.find('input[name="login"]'),
+                $password = $form.find('input[name="password"]'),
+                $button = $form.find('button'),
+                $error = $form.next(),
+                login = $login.val(),
+                password = $password.val();
+                
+            if ($button.data('busy') == 1) {
+                return false;
+            }
+                
+            $button.data('busy', 1).text('wait...');
+           
+/*, {
+                ACL: new Parse.ACL()
+            }*/
+               /* var role = new Parse.Role('admin', new Parse.ACL());
+                
+console.dir(role.getName());
+                return false;
+                role.getUsers().add(user).done(function() {
+                    console.log('add');
+                }).always(function() {
+                    $button.data('busy', 0).text('Sign Up');
+                });
+                var role = new Parse.Role();
+                var query = new Parse.Query(Parse.Role);
+                query.find();
+                
+return false;, { ACL: ACL }*/
+            
+            
+            
+                /*var query = new Parse.Query(Parse.Role);
+                query.equalTo('name', 'admin').find().done(function(roles) {                
+                    var adminRoles;
+                    
+                    if (roles.length) {
+                        adminRoles = roles[0];
+                    } else {
+                        var ACL = new Parse.ACL();
+                        ACL.setPublicReadAccess(true);
+                        ACL.setPublicWriteAccess(true);
+                    
+                        adminRoles = new Parse.Role('admin', ACL);
+                    }
+                    
+                    
+                    adminRoles.save().fail(function(error) {
+                        $error.show().html(error.message);
+                    }).always(function() {
+                        $button.data('busy', 0).text('Sign Up');
+                    });
+                }).fail(function(error) {
+                    $error.show().html(error.message);
+                    $button.data('busy', 0).text('Sign Up');
+                });
+                
+            
+            
+            
+  return false;*/
+            
+            
+
+            Parse.User.signUp(login, password).done(function(user) {    // , { ACL: ACL }            
+                var query = new Parse.Query(Parse.Role);
+                query.equalTo('name', 'admin').find().done(function(roles) {                
+                    var adminRoles;
+                    
+                    if (roles.length) {
+                        adminRoles = roles[0];
+                    } else {
+                        var ACL = new Parse.ACL();
+                        ACL.setPublicReadAccess(true);
+                        ACL.setPublicWriteAccess(true);
+                    
+                        adminRoles = new Parse.Role('admin', ACL);
+                    }
+                    
+                    adminRoles.getUsers().add(user);
+                    
+                    adminRoles.save().fail(function(error) {
+                        $error.show().html(error.message);
+                    }).always(function() {
+                        $button.data('busy', 0).text('Sign Up');
+                    });
+                }).fail(function(error) {
+                    $error.show().html(error.message);
+                    $button.data('busy', 0).text('Sign Up');
+                });                
+            }).fail(function(error) {
+                $error.show().html(error.message);
+                $button.data('busy', 0).text('Sign Up');
+            });
+            
+            return false;
+        });
+        
+        
+
+    
+            
+            
+        var $formLogIn = $context.find('form:eq(2)');
+        
+        if ( Parse.User.current() ) {
+            $formLogIn.hide().closest('li').find('p[data-marker="log-out"]').html( 'Logged in as <strong>' + Parse.User.current().get('username') + '</strong> <a href="#" data-marker="logout" title="Log out"><span class="glyphicon glyphicon-log-out"></span></a>');
+        }
+        
+        $formLogIn.on('submit', function() {
+            var $form = $(this),
+                $login = $form.find('input[name="login"]'),
+                $password = $form.find('input[name="password"]'),
+                $button = $form.find('button'),
+                $error = $form.next(),
+                login = $login.val(),
+                password = $password.val();
+                
+            if ($button.data('busy') == 1) {
+                return false;
+            }
+                
+            $button.data('busy', 1).text('wait...');
+                
+            Parse.User.logIn(login, password).done(function(user) {
+                window.location.reload();
+            }).fail(function(error) {
+                $error.show().html(error.message);
+            }).always(function() {
+                $button.data('busy', 0).text('Sign Up');
+            });
+            
+            return false;
+        });
+    }
 
     var widgetCategories = new BaasCMS.widgets.Categories({
         elementSelector: '#categories',
@@ -295,8 +458,10 @@
                 };
             }
         },
-        afterHome: function() {  
-            afterHome( this.$el.find('form') );
+        beforeHome: function() {  
+            initMainPage();
+            
+            return false;
         },
         routes: {
             '#/baascms/category/add': function(params) {

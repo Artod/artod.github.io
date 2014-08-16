@@ -22,7 +22,7 @@
 				font-weight:bold;
 			}		
 
-			#main .glyphicon  {
+			#main .glyphicon-folder-open  {
 				font-size:30px;
 				padding: 0px 8px 0px 8px;
 			}
@@ -41,26 +41,24 @@
 		
 		<script src="//cdn.rawgit.com/Artod/baascms/master/src/baascms.js"></script>
 		<script src="//cdn.rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>	
-		
+
 		<script src="../baascms-admin.js"></script>
 		
 		<script src="//www.google.com/jsapi?key=AIzaSyB-eOMMlzO0Wet2KL8r3qbKEhdLw4ORYe0"></script>
 		<script src="//apis.google.com/js/client.js"></script>
-	</head>	
+	</head>
 	
     <body>
-
-		<nav class="navbar navbar-default" role="navigation">
+	
+		<nav class="navbar navbar-default">
 			<div class="container-fluid">
 				<div class="navbar-header">
 					<a class="navbar-brand" href="#">BaasCMS</a>
 				</div>
-				<div class="collapse navbar-collapse">
-					<ul class="nav navbar-nav">
-						<li><a href="#/baascms/users">Users</a></li>
-						<li><a href="#/baascms/patterns">Patterns</a></li>
-					</ul>
-				</div>
+				<ul class="nav navbar-nav">
+					<li><a href="#/baascms/patterns">Patterns</a></li>
+				</ul>
+				<p class="navbar-text navbar-right" id="logged-in"></p>				
 			</div>
 		</nav>	
 
@@ -75,6 +73,12 @@
 				<div id="main" class="col-sm-8 col-sm-offset-1"></div>
 			</div>
 		</div>	
+		<br />
+		<br />
+		<br />
+		<div class="container">
+			BaasCMS Copyright (c) 2014 Artod
+		</div>
 		
 		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>		
 		
@@ -83,10 +87,10 @@
 				<h1>BaasCMS</h1>
 			</div>
 			<p>Start working with BaasCMS (Parse.com version) by following these steps:</p>
-			<ul>
+			<ol>
 				<li>Sign up for <a href="https://www.parse.com/#signup" target="_blank">Parse.com</a></li>
-				<li>Create <a href="https://www.parse.com/apps/new" target="_blank">new app</a>.</li>
-				<li>Copy <i>Application ID</i> and <i>Javascript Key</i> and paste them into this form:
+				<li>Create <a href="https://www.parse.com/apps/new" target="_blank">a new app</a>.</li>
+				<li>Copy <i>Application ID</i> and <i>Javascript Key</i> of your app and paste them into this form:
 					<p>
 						<form>
 							<div class="form-group">
@@ -104,11 +108,82 @@
 										<button class="btn btn-primary">Save and Try</button>
 									</div>
 								</div>
-							</div>			
+								<p class="form-control-static"><u>Note</u>: yours keys will be stored in browser cookies. On other computer or browser need to repeat 3 step.</p>
+							</div>		
 						</form>
 					</p>
 				</li>
-			</ul>
+				
+			</ol>
+			
+			<p>Protect your data:</p>
+			<ol>
+				<li>Create new admin:
+					<p>
+						<form>
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-3">
+										<label>Username:</label>
+										<input class="form-control" name="login" placeholder="Username" type="text" />
+									</div>
+									<div class="col-xs-3">
+										<label>Password:</label>
+										<input class="form-control" name="password" placeholder="Password" type="password" />
+									</div>
+									<div class="col-xs-1">
+										<label>&nbsp;</label>
+										<button class="btn btn-primary">Sign Up</button>
+									</div>
+								</div>
+							</div>			
+						</form>
+						<div class="alert alert-warning alert-dismissible" style="display:none;"></div>
+					</p>
+				</li>
+				<li>
+					Log In:
+					<p>
+						<form>						
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-3">
+										<label>Username:</label>
+										<input class="form-control" name="login" placeholder="Username" type="text" />
+									</div>
+									<div class="col-xs-3">
+										<label>Password:</label>
+										<input class="form-control" name="password" placeholder="Password" type="password" />
+									</div>
+									<div class="col-xs-1">
+										<label>&nbsp;</label>
+										<button class="btn btn-primary">Log In</button>
+									</div>
+								</div>
+							</div>							
+						</form>
+						<div class="alert alert-warning alert-dismissible" style="display:none;"></div>					
+					</p>					
+					
+					<p class="form-control-static" data-marker="log-out"></p>
+				</li>
+				<li>
+					Go to <a href="https//www.parse.com/apps">Dashboard</a> and open your app's Data Browser.					
+				</li>
+				<li>
+					Set permissions for each Class as shown in the screenshots:					
+					<br /><br /><a href="parse_set_perm1.png" target="_blank"><img src="parse_set_perm1.png" alt="" width="400px" /></a>
+					<br /><br /><a href="parse_set_perm2.png" target="_blank"><img src="parse_set_perm2.png" alt="" width="400px" /></a>
+					<br /><br /><a href="parse_set_perm3.png" target="_blank"><img src="parse_set_perm3.png" alt="" width="400px" /></a>
+				</li>		
+			</ol>
+			
+			<p>Notes:</p>
+			<ol>
+				<li>
+					After setting the permissions for the class User you will not be able to sign up new admin. If you need it, just return all back for a while.
+				</li>
+			</ol>
 		</script>
 		
 		<script id="template-baascms-items-wrap" type="text/template">
@@ -187,7 +262,7 @@
 					<% } else { %>
 						<%= category.name %>
 					<% } %>
-					<%= category.count || category.count == 0 ? "(" + category.count + ")" : "" %>
+					<%= category.count || category.count == 0 ? "<span class='badge pull-right'>" + category.count + "</span>" : "" %>
 				</span>
 				<a href="#/baascms/category/edit/<%= category.id %>"><span class="glyphicon glyphicon-pencil" style="color:#4CAE4C;"></span></a>
 				<a href="#" data-marker="delete" data-id="<%= category.id %>"><span class="glyphicon glyphicon-remove" style="color:#F0AD4E;"></span></a>
