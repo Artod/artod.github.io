@@ -1,8 +1,7 @@
-/*
- * Init Admin panel BaasCMS Parse
+/**
+ * Init admin panel BaasCMS Parse
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
-
 ;(function(window, document, _, $, BaasCMS, undefined) {
     BaasCMS.loadHomePage = function() {
         var $context = $('#main');
@@ -27,8 +26,7 @@
             window.location.reload();
             
             return false
-        });
-        
+        });        
         
         var $formSignUp = $context.find('form:eq(1)');
         
@@ -37,16 +35,12 @@
                 $username = $form.find('input[name="username"]'),
                 $password = $form.find('input[name="password"]'),
                 $button = $form.find('button'),
-                $error = $form.next(),
-                $success = $error.next(),
                 username = $username.val(),
                 password = $password.val();
                 
             if ($button.data('busy') == 1) {
                 return false;
-            }
-                
-            $error.hide();               
+            }            
                 
             $button.data('busy', 1).text('wait...');
             
@@ -76,20 +70,16 @@
                 
                 return adminRole.save();
             }).done(function() {
-                $success.html('New admin was created successful.').show();
-                
-                setTimeout(function() {
-                    $success.fadeOut('fast');
-                }, 2000);
+                BaasCMS.message('New admin was created successful.', 'success');
             }).fail(function(error) {            
                 var errors = _.isArray(error) ? error : [error];
                 
                 var errorMessage = '';
                 _.each(errors, function(error) {
-                    errorMessage += '<p>' + error.message + (error.message === 'unauthorized' ? ' (check your Application ID and Javascript Key above)' : '') + '</p>'
+                    errorMessage += error.message + (error.message === 'unauthorized' ? ' (check your Application ID and Javascript Key above)' : '');
                 });
                 
-                $error.show().html(errorMessage);
+                BaasCMS.message(errorMessage, 'danger');
             }).always(function() {
                 $button.data('busy', 0).text('Create');
             });
@@ -108,26 +98,23 @@
                 $username = $form.find('input[name="username"]'),
                 $password = $form.find('input[name="password"]'),
                 $button = $form.find('button'),
-                $error = $form.next(),
                 username = $username.val(),
                 password = $password.val();
             
             if ($button.data('busy') == 1) {
                 return false;
             }
-            
-            $error.hide();
 
             $button.data('busy', 1).text('wait...');
                 
             Parse.User.logIn(username, password).done(function(user) {
                 window.location.reload();
             }).fail(function(error) {
-                $error.show().html(error.message);
+                BaasCMS.message(error.message + (error.message === 'unauthorized' ? ' (check your Application ID and Javascript Key above)' : ''), 'danger');
             }).always(function() {
                 $button.data('busy', 0).text('Log In');
             });
-            
+
             return false;
         });
         

@@ -34,9 +34,9 @@
 		<script src="//cdnjs.cloudflare.com/ajax/libs/path.js/0.8.4/path.min.js"></script>
 		
 		<script src="//www.parsecdn.com/js/parse-1.2.19.min.js"></script>		
-
+		
 		<script src="//rawgit.com/Artod/baascms/master/src/baascms.js"></script>
-		<script src="//rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>		
+		<script src="//rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>	
 		
 		<script src="init.js"></script>
 		
@@ -70,9 +70,20 @@
 				</div>
 				<div id="main" class="col-sm-8 col-sm-offset-1"></div>
 			</div>
+
 		</div>
-		
-		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>		
+		<div class="container text-right">
+			<br />
+			<br />
+			Copyright (c) 2014 Artod
+		</div>
+			
+		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>
+		<div id="baascms-messages" style="display:none; position:fixed; top:50px; left:50%; margin-left:-200px; width:400px; font-weight:bold;"></div>		
+
+		<script id="template-baascms-message" type="text/template">
+			<div class="alert alert-<%= type %> alert-dismissible"><%= message %></div>
+		</script>
 		
 		<script id="template-baascms-home" type="text/template">
 			<div class="page-header">
@@ -100,7 +111,7 @@
 										<button class="btn btn-primary">Save and Try</button>
 									</div>
 								</div>
-								<p class="form-control-static"><u>Note</u>: yours keys will be stored in browser cookies. On other computer or browser need to repeat 3 step.</p>
+								<p class="form-control-static"><u>Note</u>: yours keys will be stored in browser's cookies so from another computer or browser need to repeat 3 step.</p>
 							</div>		
 						</form>
 					</p>
@@ -131,9 +142,6 @@
 							</div>
 						</div>			
 					</form>
-					
-					<div class="alert alert-danger alert-dismissible" style="display:none;"></div>											
-					<div class="alert alert-success alert-dismissible" style="display:none;"></div>
 				</li>
 				<li>
 					Log In:
@@ -157,8 +165,6 @@
 						</div>							
 					</form>
 					
-					<div class="alert alert-danger alert-dismissible" style="display:none;"></div>
-					
 					<p class="form-control-static" data-marker="log-out" style="display:none;"></p>
 				</li>
 				<li>
@@ -181,7 +187,7 @@
 					<p><u>Note</u>: after disabling class creation, you will not be able to create items with a <strong>new</strong> pattern. If you need it, just return all back for a while.</p>
 				</li>
 			</ol>
-
+			
 		</script>
 		
 		<script id="template-baascms-items-wrap" type="text/template">
@@ -413,7 +419,7 @@
 							<select id="<%= id %>" name="<%= name %>" class="form-control">							
 								<% _.each(options, function(option) { %>
 									<% option = _.isString(option) ? option.split(",") : option %>
-									<option value="<%= option[0] %>"<%= option[0] == value ? " selected='selected'" : "" %>><%= option[1] %></option>									
+									<option value="<%= option[0] %>"<%= option[0] == value ? " selected='selected'" : "" %>><%= option[1] || option[0] %></option>									
 								<% }) %>							
 							</select>
 							
@@ -422,13 +428,10 @@
 			<% } %>
 		</script>
 		
-		
-		
-		
-		
-		
-		<script id="template-baascms-category" type="text/template">		
-			<h1><%= category.name %></h1>
+		<script id="template-baascms-category" type="text/template">
+			<div class="page-header">
+				<h1><%= category.name %></h1>
+			</div>
 			
 			<% if (children.length) { %>
 				<ul class="list-inline">
@@ -443,9 +446,7 @@
 			<img src="<%= category.icon %>" alt="" />
 			
 			<%= category.body %>		
-		</script>	
-
-
+		</script>
 		
     </body>
 </html>

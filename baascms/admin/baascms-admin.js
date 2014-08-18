@@ -1,10 +1,11 @@
-/*
+/**
  * Admin panel BaasCMS
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
 
-;(function(window, document, _, $, undefined) {
+;(function(window, document, _, $, BaasCMS, undefined) {
     if (!BaasCMS.inited) {
+        console.warning('Need to initialize BaasCMS first.');
         return;
     }
 
@@ -25,7 +26,7 @@
                 var cid = $this.data('id');
                 
                 BaasCMS.adapter.delCategory(cid).done(function() {
-                    widgetMain.load();
+                    widgetMain.load();                   
                 
                     $('#category-' + cid).fadeOut(100, function() {
                         $(this).remove();
@@ -84,6 +85,13 @@
             name: 'pattern_name',
             type: 'select',
             options: optionPatterns
+        }, {
+            name: 'place',
+            type: 'select',
+            options: ['', 'menu', 'submenu', 'catalog', 'section']
+        }, {
+            name: 'icon',
+            type: 'google drive image'
         }, {
             name: 'body',
             type: 'textarea'
@@ -149,7 +157,13 @@
                     type = $field.find(selectorType).val(),
                     options = $field.find(selectorOptions).val();
 
+                
+                    
                 if ( /^[a-z][a-z0-9_]*$/i.test(name) ) {
+                    if ( _.contains(['id', 'category_id', 'acl'], name) ) {// reserved keys
+                        name = name + '_1';
+                    }
+                
                     $fieldName.val(name);
                 } else {
                     $fieldName.parent().addClass('has-error');
@@ -248,12 +262,12 @@
                         
                         var iid = $(this).data('id');
                         
-                        BaasCMS.adapter.delItem(patternName, iid, cid).done(function() {                        
+                        BaasCMS.adapter.delItem(patternName, iid, cid).done(function() {
+                            widgetCategories.load();
+                            
                             $('#item' + _.str.dasherize(patternName) + '-' + iid).fadeOut(100, function() {
                                 $(this).remove();
-                            });
-                            
-                            widgetCategories.load();
+                            });                            
                         });
                         
                         return false;
@@ -289,7 +303,8 @@
                         var data = BaasCMS.utils.collectDataForm($form);
 
                         BaasCMS.adapter.save('Category', data).done(function(cid) {
-                            widgetCategories.load();
+                            widgetCategories.load();           
+                            window.location.hash = '/baascms/category/edit/' + cid;
                         });
 
                         return false;
@@ -310,7 +325,7 @@
                     BaasCMS.adapter.all('Pattern')
                 ).done(function(dataCategory, dataCategories, dataPatterns) {
                     if (!dataCategory.id) {
-                        that.fill(waitfor, 'Category was not found.');
+                        that.fill(waitfor, 'Category was not found.');  
                         return;
                     }
                 
@@ -328,6 +343,7 @@
                         var data = BaasCMS.utils.collectDataForm($form);
 
                         BaasCMS.adapter.save('Category', data).done(function(cid) {
+                            BaasCMS.message('Updated', 'success'); // otherwise it may not be clear                       
                             widgetCategories.load();
                         });
 
@@ -347,7 +363,7 @@
                     dataCategory = data;
 
                     if (!dataCategory.id) {
-                        that.fill(waitfor, 'Such a category was not found.');                      
+                        that.fill(waitfor, 'Such a category was not found.');                                              
                         return;
                     }
                     
@@ -399,9 +415,9 @@
                                 id: cid,
                                 count: count
                             })
-                        }).done(function(cid) {
-                            widgetCategories.load();
-                            window.location.hash = '/category/' + cid;
+                        }).done(function() {
+                            widgetCategories.load();                            
+                            window.location.hash = '/baascms/category/' + cid;                            
                         });
 
                         return false;
@@ -467,8 +483,8 @@
 
                         var data = BaasCMS.utils.collectDataForm($form);
 
-                        BaasCMS.adapter.save(dataPattern.name, data).done(function(object) {
-
+                        BaasCMS.adapter.save(dataPattern.name, data).done(function() {
+                            window.location.hash = '/baascms/category/' + cid;
                         });
 
                         return false;
@@ -490,7 +506,8 @@
                     waitfor = this.startWaiting();
                 
                 BaasCMS.adapter.all('Pattern', {
-                    select: ['id', 'name']
+                    select: ['id', 'name'],
+                    order: '-createdAt'
                 }).done(function(data) {                
                     that.fill( waitfor, _.template( $('#template-baascms-patterns').html(), {
                         data: data
@@ -513,7 +530,9 @@
                     types: BaasCMS.cons.formFieldTypes
                 } ) );                
 
-                patternForm( this.$el.find('form') );
+                patternForm(this.$el.find('form'), function() {
+                    window.location.hash = '/baascms/patterns';                 
+                });
             },
             '#/baascms/pattern/edit/:id': function(params) {
                 var that = this,
@@ -529,7 +548,9 @@
                         types: BaasCMS.cons.formFieldTypes
                     } ) );
 
-                    patternForm( that.$el.find('form') );
+                    patternForm(that.$el.find('form'), function() {
+                        window.location.hash = '/baascms/patterns';
+                    });
                 });
             }
         }
@@ -595,7 +616,8 @@
         });
     });
     
-})(window, document, window._, window.jQuery);
+})(window, document, window._, window.jQuery, window.BaasCMS);
+
 
 /**!
  * Google Drive File Picker Example
