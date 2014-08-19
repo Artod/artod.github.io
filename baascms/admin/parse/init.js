@@ -2,6 +2,7 @@
  * Init admin panel BaasCMS Parse
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
+
 ;(function(window, document, _, $, BaasCMS, undefined) {
     BaasCMS.loadHomePage = function() {
         var $context = $('#main');
