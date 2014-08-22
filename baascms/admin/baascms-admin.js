@@ -1,5 +1,5 @@
 /**
- * Admin panel BaasCMS
+ * Admin Panel BaasCMS
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
 
@@ -7,16 +7,18 @@
     'use strict';
     
     if (!BaasCMS.inited) {
-        console.error('Need to initialize BaasCMS first.');
-
+        console.info('Need to initialize BaasCMS first.');
         return;
     }
 
     var widgetCategories = new BaasCMS.widgets.Categories({
         elementSelector: '#categories',
+        onRoute: function(route) {
+            this.$el.find('li').removeClass('active');
+
+            $('#category-' + route.params['cid']).addClass('active');
+        },        
         afterRender: function() {
-            var self = this;
-            
             $('a[data-marker="delete"]', this.$el).on('click', function(e) {
                 if (BaasCMS.adapter.busy) return false;
                 
@@ -40,11 +42,6 @@
                 
                 return false;
             });
-        },
-        onEnter: function() {        
-            this.$el.find('li').removeClass('active');
-            
-            ( this.currentCid && $('#category-' + this.currentCid).addClass('active') );
         }
     });
     
@@ -77,6 +74,9 @@
             name: 'name',
             type: 'text'
         }, {
+            name: 'icon',
+            type: 'google drive image'
+        }, {
             name: 'parent_id',
             type: 'select',
             options: optionCategories
@@ -84,15 +84,18 @@
             name: 'pattern_name',
             type: 'select',
             options: optionPatterns
+        }, {  
+            name: 'template',
+            type: 'text'
         }, {
             name: 'place',
             type: 'select',
-            options: ['', 'menu', 'submenu', 'catalog', 'section']
+            options: ['', 'menu', 'submenu', 'catalog', 'sections', 'block 1', 'block 2', 'block 3']
         }, {
-            name: 'icon',
-            type: 'google drive image'
+            name: 'description',
+            type: 'textarea'
         }, {
-            name: 'body',
+            name: 'article',
             type: 'textarea'
         }];
     };
@@ -182,8 +185,8 @@
             }
 
             if (data.id) { // edit
-                BaasCMS.adapter.save('Pattern', data).done(function() {
-                    onAdd();
+                BaasCMS.adapter.save('Pattern', data).done(function(id) {
+                    onAdd(id);
                 });                                    
             } else { // create
                 BaasCMS.adapter.all('Pattern', {
@@ -201,8 +204,8 @@
                     data.name = newName;
                     
                     return BaasCMS.adapter.save('Pattern', data);
-                }).done(function() {
-                    onAdd();
+                }).done(function(id) {
+                    onAdd(id);
                 });
             }
 
@@ -242,20 +245,17 @@
     };
     
     var widgetMain = new BaasCMS.widgets.Main({
-        elementSelector: '#main',      
-        category: {
-            afterQuery: function(data) {
-                var patternName = data.category.pattern_name,
-                    cid = data.category.id;
-                
-                if (!patternName) {
-                    return;
-                }
-                
-                var self = this;
-                
-                widgetMain.opts.items[patternName] = widgetMain.opts.items[patternName] || {};        
-                widgetMain.opts.items[patternName].afterRender = function() {
+        elementSelector: '#main',
+        itemsOpts: {
+            '*': {
+                afterRender: function(data) {
+                    var patternName = data.category.pattern_name,
+                        cid = data.category.id;
+                    
+                    if (!patternName) {
+                        return;
+                    }
+                    
                     $('a[data-marker="delete"]', this.$el).on('click', function() {
                         if (BaasCMS.adapter.busy) return false;
                         
@@ -271,7 +271,7 @@
                         
                         return false;
                     });
-                };
+                }
             }
         },
         beforeHome: function() {  
@@ -280,7 +280,7 @@
         routes: {
             '#/baascms/category/add': function(params) {
                 var self = this,
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                 
                 $.when(
                     BaasCMS.adapter.all('Category', {
@@ -288,7 +288,7 @@
                     }),
                     BaasCMS.adapter.all('Pattern')
                 ).done(function(dataCategories, dataPatterns) {
-                    self.fill( waitfor, _.template( $('#template-baascms-form').html(), {
+                    self.fill( expectUid, _.template( $('#template-baascms-form').html(), {
                         header: 'Add category',
                         button: 'Create',
                         form: generateForm( getCategoryPattern(dataCategories, dataPatterns) )
@@ -303,16 +303,16 @@
 
                         BaasCMS.adapter.save('Category', data).done(function(cid) {
                             widgetCategories.load();           
-                            window.location.hash = '/baascms/category/edit/' + cid;
+                            window.location.hash = '/baascms/category/' + cid + '/edit';
                         });
 
                         return false;
                     });
                 });
             },
-            '#/baascms/category/edit/:cid': function(params) {
+            '#/baascms/category/:cid/edit': function(params) {
                 var self = this,        
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                 
                 $.when(
                     BaasCMS.adapter.getById('Category', params['cid'], {
@@ -324,11 +324,11 @@
                     BaasCMS.adapter.all('Pattern')
                 ).done(function(dataCategory, dataCategories, dataPatterns) {
                     if (!dataCategory.id) {
-                        self.fill(waitfor, 'Category was not found.');  
+                        self.fill(expectUid, 'Category was not found.');  
                         return;
                     }
                 
-                    self.fill(waitfor, _.template( $('#template-baascms-form').html(), {
+                    self.fill(expectUid, _.template( $('#template-baascms-form').html(), {
                         header: 'Edit category',
                         button: 'Update',
                         form: generateForm( dataCategory, getCategoryPattern(dataCategories, dataPatterns, params['cid']) )
@@ -354,7 +354,7 @@
                 var dataCategory,
                     cid = params['cid'],
                     self = this,
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                 
                 BaasCMS.adapter.getById('Category', cid, {
                     cache: 'no'
@@ -362,7 +362,7 @@
                     dataCategory = data;
 
                     if (!dataCategory.id) {
-                        self.fill(waitfor, 'Such a category was not found.');                                              
+                        self.fill(expectUid, 'Such a category was not found.');                                              
                         return;
                     }
                     
@@ -375,7 +375,7 @@
                     }
                     
                     if (!dataPattern.name) {
-                        self.fill(waitfor, 'There is no pattern for this category.');
+                        self.fill(expectUid, 'There is no pattern for this category.');
                         return;
                     }
                     
@@ -386,11 +386,11 @@
                     
                     var template = $('#template-baascms' + _.str.dasherize(dataPattern.name) + '-form').html() || $('#template-baascms-form').html();
                     
-                    self.fill( waitfor, _.template( template, {
+                    self.fill( expectUid, _.template(template, {
                         header: 'Add ' + _.str.humanize(dataPattern.name),
                         button: 'Create',
                         form: generateForm({category_id: cid}, dataPattern.pattern)
-                    } ) );
+                    }) );
                     
                     var $form = self.$el.find('form');
                     
@@ -423,12 +423,12 @@
                     });
                 });
             },
-            '#/baascms/category/:cid/item/edit/:iid': function(params) {
+            '#/baascms/category/:cid/item/:iid/edit': function(params) {
                 var dataCategory,
                     cid = params['cid'],
                     iid = params['iid'],
                     self = this,
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                     
                 BaasCMS.adapter.all('Category', {
                     select: BaasCMS.cons.categoriesSelect
@@ -436,7 +436,7 @@
                     dataCategory = _.findWhere(dataCategories, {id: cid});
                     
                     if (!dataCategory || !dataCategory.id) {
-                        self.fill(waitfor, 'Such a category was not found.');
+                        self.fill(expectUid, 'Such a category was not found.');
                         return;
                     }
                     
@@ -454,12 +454,12 @@
                     var dataPattern = _.findWhere(dataPatterns, {name: dataCategory.pattern_name});
                     
                     if (!dataPattern.name) {
-                        self.fill(waitfor, 'There is no pattern for this category.');
+                        self.fill(expectUid, 'There is no pattern for this category.');
                         return;
                     }
                     
                     if (!dataItem.id) {
-                        self.fill(waitfor, 'Item was not found.');
+                        self.fill(expectUid, 'Item was not found.');
                         return;
                     }
                     
@@ -470,7 +470,7 @@
                     
                     var template = _.str.trim( $('#template-baascms' + _.str.dasherize(dataPattern.name) + '-form').html() ) || $('#template-baascms-form').html();
                     
-                    self.fill( waitfor, _.template(template, {
+                    self.fill( expectUid, _.template(template, {
                         header: 'Edit ' + _.str.humanize(dataPattern.name),
                         button: 'Update',
                         form: generateForm(dataItem, dataPattern.pattern)
@@ -483,7 +483,7 @@
                         var data = BaasCMS.utils.collectDataForm($form);
 
                         BaasCMS.adapter.save(dataPattern.name, data).done(function() {
-                            window.location.hash = '/baascms/category/' + cid;
+                            BaasCMS.message('Updated', 'success'); // otherwise it may not be clear  
                         });
 
                         return false;
@@ -502,13 +502,13 @@
                 };
                 
                 var self = this,                
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                 
                 BaasCMS.adapter.all('Pattern', {
                     select: ['id', 'name'],
                     order: '-createdAt'
                 }).done(function(data) {                
-                    self.fill( waitfor, _.template( $('#template-baascms-patterns').html(), {
+                    self.fill( expectUid, _.template( $('#template-baascms-patterns').html(), {
                         data: data
                     } ) );
                     
@@ -529,18 +529,18 @@
                     types: BaasCMS.cons.formFieldTypes
                 } ) );                
 
-                patternForm(this.$el.find('form'), function() {
+                patternForm(this.$el.find('form'), function(id) {
                     window.location.hash = '/baascms/patterns';                 
                 });
             },
-            '#/baascms/pattern/edit/:id': function(params) {
+            '#/baascms/pattern/:id/edit': function(params) {
                 var self = this,
-                    waitfor = this.startWaiting();
+                    expectUid = this.startExpecting();
                     
                 BaasCMS.adapter.getById('Pattern', params['id'], {
                     cache: 'no'
                 }).done(function(data) {
-                    self.fill( waitfor, _.template( $('#template-baascms-pattern-form').html(), {
+                    self.fill( expectUid, _.template( $('#template-baascms-pattern-form').html(), {
                         header: 'Edit pattern',
                         button: 'Update',
                         data: data,
@@ -548,7 +548,7 @@
                     } ) );
 
                     patternForm(self.$el.find('form'), function() {
-                        window.location.hash = '/baascms/patterns';
+                        BaasCMS.message('Updated', 'success'); // otherwise it may not be clear
                     });
                 });
             }
@@ -750,5 +750,3 @@
         }
     };
 }());
-			                       
-

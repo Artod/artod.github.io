@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>BaasCMS admin panel</title>
+        <title>BaasCMS Parse Admin Panel</title>
 		
 		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -44,21 +44,8 @@
 		
 		<script src="//www.google.com/jsapi?key=AIzaSyB-eOMMlzO0Wet2KL8r3qbKEhdLw4ORYe0"></script>
 		<script src="//apis.google.com/js/client.js"></script>
-	</head>
-	
+	</head>	
     <body>
-	<div id="bread">
-	bread
-	</div>
-	
-<script type="text/javascript">
-
-	new BaasCMS.widgets.Breadcrumbs({
-		elementSelector: '#bread'
-	});
-
-</script>
-	
 		<nav class="navbar navbar-default">
 			<div class="container-fluid">
 				<div class="navbar-header">
@@ -67,7 +54,7 @@
 				<ul class="nav navbar-nav">
 					<li><a href="#/baascms/patterns">Patterns</a></li>
 				</ul>
-				<p class="navbar-text navbar-right" id="logged-in"></p>				
+				<p class="navbar-text navbar-right" id="logged-in"><a href="#login-form"><strong>Log In</strong></a></p>				
 			</div>
 		</nav>	
 
@@ -90,7 +77,11 @@
 			
 		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>
 		<div id="baascms-messages" style="display:none; position:fixed; top:50px; left:50%; margin-left:-200px; width:400px; font-weight:bold;"></div>		
-
+		
+		<script id="template-baascms-logged" type="text/template">
+			Logged in as <strong><%= username %></strong> <a href="#" data-marker="logout" title="Log out"><span class="glyphicon glyphicon-log-out"></span></a>
+		</script>
+		
 		<script id="template-baascms-message" type="text/template">
 			<div class="alert alert-<%= type %> alert-dismissible"><%= message %></div>
 		</script>
@@ -129,80 +120,81 @@
 				
 			</ol>
 			
-			<p>Protect your data:</p>
-			<ol>
-				<li>Create new admin:
-					<p> </p>
-					
-					<form>
-						<div class="form-group">
-							<div class="row">
-								<div class="col-xs-3">
-									<label>Username:</label>
-									<input class="form-control" name="username" placeholder="Username" type="text" />
-								</div>
-								<div class="col-xs-3">
-									<label>Password:</label>
-									<input class="form-control" name="password" placeholder="Password" type="password" />
-								</div>
-								<div class="col-xs-1">
-									<label>&nbsp;</label>
-									<button class="btn btn-primary">Create</button>
-								</div>
-							</div>
-						</div>			
-					</form>
-				</li>
-				<li>
-					Log In:
-					<form>	
+			<div id="protect-your-data">
+				<p>Protect your data:</p>
+				<ol>
+					<li>Create new admin:
 						<p> </p>
-						<div class="form-group">
-							<div class="row">
-								<div class="col-xs-3">
-									<label>Username:</label>
-									<input class="form-control" name="username" placeholder="Username" type="text" />
+						
+						<form>
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-3">
+										<label>Username:</label>
+										<input class="form-control" name="username" placeholder="Username" type="text" />
+									</div>
+									<div class="col-xs-3">
+										<label>Password:</label>
+										<input class="form-control" name="password" placeholder="Password" type="password" />
+									</div>
+									<div class="col-xs-1">
+										<label>&nbsp;</label>
+										<button class="btn btn-primary">Create</button>
+									</div>
 								</div>
-								<div class="col-xs-3">
-									<label>Password:</label>
-									<input class="form-control" name="password" placeholder="Password" type="password" />
+							</div>			
+						</form>
+					</li>
+					<li>
+						<a name="login-form"></a> Log In:
+						<form>	
+							<p> </p>
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-3">
+										<label>Username:</label>
+										<input class="form-control" name="username" placeholder="Username" type="text" />
+									</div>
+									<div class="col-xs-3">
+										<label>Password:</label>
+										<input class="form-control" name="password" placeholder="Password" type="password" />
+									</div>
+									<div class="col-xs-1">
+										<label>&nbsp;</label>
+										<button class="btn btn-primary">Log In</button>
+									</div>
 								</div>
-								<div class="col-xs-1">
-									<label>&nbsp;</label>
-									<button class="btn btn-primary">Log In</button>
-								</div>
-							</div>
-						</div>							
-					</form>
-					
-					<p class="form-control-static" data-marker="log-out" style="display:none;"></p>
-				</li>
-				<li>
-					Go to <a href="https//www.parse.com/apps">Dashboard</a> and open your app's Data Browser.					
-				</li>
-				<li>
-					Set permissions for each class as shown in screenshots below:					
-					<br /><br /><a href="parse_set_perm1.jpg" target="_blank"><img src="parse_set_perm1.jpg" alt="" width="300px" /></a>
-					<br /><br /><a href="parse_set_perm2.jpg" target="_blank"><img src="parse_set_perm2.jpg" alt="" width="300px" /></a>
-					<br /><br /><a href="parse_set_perm3.jpg" target="_blank"><img src="parse_set_perm3.jpg" alt="" width="300px" /></a><br /><br />
-					
-					<p><u>Note</u>: after setting the permissions for the class User, you will not be able to create a new admin. If you need it, just return all back for a while.</p>
+							</div>							
+						</form>
+						
+						<p class="form-control-static" data-marker="log-out" style="display:none;"></p>
+					</li>
+					<li>
+						Go to <a href="https//www.parse.com/apps">Dashboard</a> and open your app's Data Browser.					
+					</li>
+					<li>
+						Set permissions for each class as shown in screenshots below:					
+						<br /><br /><a href="parse_set_perm1.jpg" target="_blank"><img src="parse_set_perm1.jpg" alt="" width="300px" /></a>
+						<br /><br /><a href="parse_set_perm2.jpg" target="_blank"><img src="parse_set_perm2.jpg" alt="" width="300px" /></a>
+						<br /><br /><a href="parse_set_perm3.jpg" target="_blank"><img src="parse_set_perm3.jpg" alt="" width="300px" /></a><br /><br />
+						
+						<p><u>Note</u>: after setting the permissions for the class User, you will not be able to create a new admin. If you need it, just return all back for a while.</p>
 
-				</li>
-				<li>
-					Only after you have created the final structure of your site, disable the creation of new classes as shown in screenshots below:
-					<br /><br /><a href="parse_set_perm4.jpg" target="_blank"><img src="parse_set_perm4.jpg" alt="" width="300px" /></a>
-					<br /><br /><a href="parse_set_perm5.jpg" target="_blank"><img src="parse_set_perm5.jpg" alt="" width="300px" /></a><br /><br />
-					
-					<p><u>Note</u>: after disabling class creation, you will not be able to create items with a <strong>new</strong> pattern. If you need it, just return all back for a while.</p>
-				</li>
-			</ol>
-			
+					</li>
+					<li>
+						Only after you have created the final structure of your site, disable the creation of new classes as shown in screenshots below:
+						<br /><br /><a href="parse_set_perm4.jpg" target="_blank"><img src="parse_set_perm4.jpg" alt="" width="300px" /></a>
+						<br /><br /><a href="parse_set_perm5.jpg" target="_blank"><img src="parse_set_perm5.jpg" alt="" width="300px" /></a><br /><br />
+						
+						<p><u>Note</u>: after disabling class creation, you will not be able to create items with a <strong>new</strong> pattern. If you need it, just return all back for a while.</p>
+					</li>
+				</ol>
+			</div>
 		</script>
 		
 		<script id="template-baascms-items-wrap" type="text/template">
 			<div class="page-header">
-				<h1><%= _.str.humanize(pattern.name) %></h1>
+				<h1><%= _.str.humanize(data.pattern.name) %></h1>
 			</div>
 			
 			<p class="text-right"><a href="#/baascms/category/<%= data.category.id %>/item/add">Add new item +</a></p>
@@ -210,7 +202,7 @@
 			<table class="table table-condensed table-hover">
 				<thead>
 					<tr>
-						<% _.each(pattern.pattern, function(field) { %>
+						<% _.each(data.pattern.pattern, function(field) { %>
 							<% if ( field && !{"textarea": 1, "hidden": 1}[field.type] ) { %>
 								<th><a href="#/baascms/category/<%= data.category.id %>/page/<%= data.page %>/sort/<%= 
 									_.str.ltrim(opts.sort, "-") !== field.name
@@ -241,8 +233,8 @@
 		</script>
 		
 		<script id="template-baascms-items-element" type="text/template">
-			<tr id="item<%= _.str.dasherize(pattern.name) %>-<%= item.id %>">			
-				<% _.each(pattern.pattern, function(field) { %>
+			<tr id="item<%= _.str.dasherize(data.category.pattern_name) %>-<%= item.id %>">			
+				<% _.each(data.pattern.pattern, function(field) { %>
 					<% if ( field && !{"textarea": 1, "hidden": 1}[field.type] ) { %>
 						<td>
 							<% if ( {"google drive image": 1}[field.type] && item[field.name] ) { %>						
@@ -256,42 +248,20 @@
 					<% } %>
 				<% }) %>				
 				<td>
-					<a href="#/baascms/category/<%= item.category_id %>/item/edit/<%= item.id %>">edit</a>
+					<a href="#/baascms/category/<%= item.category_id %>/item/<%= item.id %>/edit">edit</a>
 					<a href="#" data-marker="delete" data-id="<%= item.id %>">delete</a>
 				</td>
 			</tr>
 		</script>
 		
-		<script id="template-baascms-item" type="text/template">
-			<div class="page-header">
-				<h1><%= item.name %></h1>
-			</div>
-			
-			<ul>
-				<% _.each(pattern.pattern, function(field) { %>
-					<% if (field && field.name !== "name" && !{"textarea": 1, "hidden": 1}[field.type] && item[field.name]) { %>
-						<li>
-							<% if ( {"google drive image": 1}[field.type] && item[field.name] ) { %>						
-								<img src="<%= item[field.name] %>" width="50px" alt="" />								
-							<% } else  if ( {"google drive file": 1}[field.type] && item[field.name] ) { %>
-								<a href="<%= item[field.name] %>">Link</a>
-							<% } else { %>								
-								<%= item[field.name] %>								
-							<% } %>
-						</li>
-					<% } %>
-				<% }) %>
-			</ul>	
-		</script>
-		
-		<script id="template-baascms-category-wrap" type="text/template">			
+		<script id="template-baascms-categories-wrap" type="text/template">			
 			<ul>
 				<%= htmlElements %>
 			</ul>
 		</script>
 
-		<script id="template-baascms-category-element" type="text/template">
-			<li id="category-<%= category.id %>"<%= currentCid === category.id ? " class='active'" : "" %>>
+		<script id="template-baascms-categories-element" type="text/template">
+			<li id="category-<%= category.id %>"<%= routeParams["cid"] === category.id ? " class='active'" : "" %>>
 				<span>
 					<% if (category.pattern_name) { %>
 						<a href="#/baascms/category/<%= category.id %>"><%= category.name %></a>
@@ -300,7 +270,7 @@
 					<% } %>
 					<%= category.count || category.count == 0 ? "<span class='badge pull-right'>" + category.count + "</span>" : "" %>
 				</span>
-				<a href="#/baascms/category/edit/<%= category.id %>"><span class="glyphicon glyphicon-pencil" style="color:#4CAE4C;"></span></a>
+				<a href="#/baascms/category/<%= category.id %>/edit"><span class="glyphicon glyphicon-pencil" style="color:#4CAE4C;"></span></a>
 				<a href="#" data-marker="delete" data-id="<%= category.id %>"><span class="glyphicon glyphicon-remove" style="color:#F0AD4E;"></span></a>
 				<%= htmlChildren %>
 			</li>		
@@ -391,7 +361,7 @@
 						<tr id="pattern-<%= el.id %>">
 							<td><%= el.name %></td>
 							<td>
-								<a href="#/baascms/pattern/edit/<%= el.id %>">edit</a>
+								<a href="#/baascms/pattern/<%= el.id %>/edit">edit</a>
 								<a href="#" data-marker="delete" data-id="<%= el.id %>">delete</a>
 							</td>
 						</tr>
@@ -399,9 +369,6 @@
 				</tbody>
 			</table>			
 		</script>
-		
-		
-		
 		
 		<script id="template-baascms-form" type="text/template">
 			<div class="page-header">
@@ -461,52 +428,6 @@
 					<% break; } %>
 				</div>
 			<% } %>
-		</script>
-		
-		
-		
-		
-		
-		
-		
-		
-
-		
-		
-		<script id="template-baascms-breadcrumbs-wrap" type="text/template">
-			<ul>
-				<%= htmlElements %>
-			</ul>		
-		</script>
-		
-		<script id="template-baascms-breadcrumbs-element" type="text/template">
-			<li>
-				<a href="#/baascms/category/<%= category.id %>"><%= category.name %></a>
-			</li>	
-		</script>
-		
-		
-		<script id="template-baascms-category" type="text/template">
-			<div class="page-header">
-				<h1><%= category.name %></h1>
-			</div>
-			
-			<% if (children.length) { %>
-				<ul class="list-inline">
-					<% _.each(children, function(child) { %>
-						<li>
-							<a href="#/baascms/category/<%= child.id %>"><%= child.name %></a>
-						</li>
-					<% }) %>
-				</ul>
-			<% } %>
-			
-			<img src="<%= category.icon %>" alt="" />
-			
-			<%= category.body %>		
-		</script>
-		
-		
-		
+		</script>		
     </body>
 </html>
