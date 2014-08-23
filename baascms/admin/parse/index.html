@@ -3,6 +3,9 @@
     <head>
         <title>BaasCMS Parse Admin Panel</title>
 		
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta charset="utf-8" />
+		
 		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" />
 
 		<style type="text/css">
@@ -36,7 +39,7 @@
 		<script src="//www.parsecdn.com/js/parse-1.2.19.min.js"></script>		
 		
 		<script src="//rawgit.com/Artod/baascms/master/src/baascms.js"></script>
-		<script src="//rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>	
+		<script src="//rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>
 		
 		<script src="init.js"></script>
 		
@@ -242,7 +245,7 @@
 							<% } else  if ( {"google drive file": 1}[field.type] && item[field.name] ) { %>
 								<a href="<%= item[field.name] %>">Link</a>
 							<% } else { %>								
-								<%= item[field.name] %>								
+								<%= _.escape(item[field.name]) %>								
 							<% } %>
 						</td>
 					<% } %>
@@ -264,14 +267,15 @@
 			<li id="category-<%= category.id %>"<%= routeParams["cid"] === category.id ? " class='active'" : "" %>>
 				<span>
 					<% if (category.pattern_name) { %>
-						<a href="#/baascms/category/<%= category.id %>"><%= category.name %></a>
+						<a href="#/baascms/category/<%= category.id %>"><%= _.escape(category.name) %></a>
 					<% } else { %>
-						<%= category.name %>
+						<%= _.escape(category.name) %>
 					<% } %>
 					<%= category.count || category.count == 0 ? "<span class='badge pull-right'>" + category.count + "</span>" : "" %>
 				</span>
 				<a href="#/baascms/category/<%= category.id %>/edit"><span class="glyphicon glyphicon-pencil" style="color:#4CAE4C;"></span></a>
 				<a href="#" data-marker="delete" data-id="<%= category.id %>"><span class="glyphicon glyphicon-remove" style="color:#F0AD4E;"></span></a>
+
 				<%= htmlChildren %>
 			</li>		
 		
@@ -394,7 +398,7 @@
 					<label for="<%= type %>-<%= _.str.dasherize(name) %>"><%= _.str.humanize(name) %></label>
 					
 					<% switch(type) { case "text": case "number": %>
-							<input id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>" type="<%= type %>" value="<%= value %>"<%= type === "number" ? "step='any'" : "" %> />
+							<input id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>" type="<%= type %>" value="<%= _.escape(value) %>"<%= type === "number" ? "step='any'" : "" %> />
 
 						<% break; case "google drive image": case "google drive file": %>
 							<p class="form-control-static">
@@ -415,13 +419,13 @@
 								<a href="#"<%= value ? "" : " style='display:none;'" %> data-marker="google-drive-delete">delete</a>
 							</p>
 						<% break; case "textarea": %>
-							<textarea id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>"><%= value %></textarea>
+							<textarea id="<%= id %>" name="<%= name %>" class="form-control" placeholder="<%= name %>"><%= _.escape(value) %></textarea>
 							
 						<% break; case "select": %>
 							<select id="<%= id %>" name="<%= name %>" class="form-control">							
 								<% _.each(options, function(option) { %>
 									<% option = _.isString(option) ? option.split(",") : option %>
-									<option value="<%= option[0] %>"<%= option[0] == value ? " selected='selected'" : "" %>><%= option[1] || option[0] %></option>									
+									<option value="<%= _.escape(option[0]) %>"<%= option[0] == value ? " selected='selected'" : "" %>><%= _.escape(option[1] || option[0]) %></option>									
 								<% }) %>							
 							</select>
 							
