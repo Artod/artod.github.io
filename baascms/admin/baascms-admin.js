@@ -114,7 +114,7 @@
                         return;
                     }
                     
-                    optionCategories.push([category.id, _.str.repeat('&nbsp;&nbsp;&nbsp;&nbsp;', level) + category.name]);
+                    optionCategories.push([category.id, _.str.repeat('----', level) + category.name]);
 
                     var children = _.where(dataCategories, {parent_id: category.id});
 
