@@ -146,7 +146,7 @@
         }, {
             name: 'place',
             type: 'select',
-            options: ['', 'menu', 'submenu', 'catalog', 'sections', 'block 1', 'block 2', 'block 3']
+            options: ['', 'menu', 'submenu', 'catalog', 'sections', 'block1', 'block2', 'block3']
         }, {
             name: 'description',
             type: 'textarea'
