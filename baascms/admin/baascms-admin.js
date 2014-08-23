@@ -28,16 +28,72 @@
                     return false;
                 }
             
-                var cid = $this.data('id');
-                
-                BaasCMS.adapter.delCategory(cid).done(function() {
-                    widgetMain.load();                   
+                var cid = $this.data('id'),
+                    cids = [],
+                    patternNames = [];
+
+                $.when(
+                    BaasCMS.adapter.all('Category', {
+                        cache: 'no',
+                        select: ['id', 'name', 'parent_id']
+                    }),
+                    BaasCMS.adapter.all('Pattern', {
+                        cache: 'no',
+                        select: ['name']
+                    })
+                ).then(function(dataCategories, dataPatterns) {
+                    var descendants = [],
+                        generation = 0,
+                        recurs = function(categories, generation) {
+                            _.each(categories, function(category) {
+                                descendants.push(category);
+
+                                var children = _.where(dataCategories, {parent_id: category.id});
+                                if (children.length) {
+                                    recurs(children, generation + 1);
+                                }
+                            });
+                        };
+
+                    recurs( _.where(dataCategories, {parent_id: cid}), '', generation );
+
+                    cids = _.pluck(descendants, 'id');
+                    cids.push(cid);
+
+                    patternNames = _.pluck(dataPatterns, 'name');
+                    var patternDeferreds = [];
+
+                    _.each(patternNames, function(patternName) {
+                        patternDeferreds.push( BaasCMS.adapter.all(patternName, {
+                            cache: 'no',
+                            select: ['id'],
+                            where: {
+                                'category_id': {
+                                    '$in': cids
+                                }
+                            }
+                        }) );
+                    });
+
+                    return $.when.apply(this, patternDeferreds);
+                }).then(function() {
+                    var articleDeferreds = [];
+
+                    _.each(arguments, function(dataArticle, i) {
+                        var iids = _.pluck(dataArticle, 'id');
+
+                        articleDeferreds.push( BaasCMS.adapter.del(patternNames[i], iids) );
+                    });
+
+                    return $.when.apply(this, articleDeferreds);
+                }).then(function() {
+                    return BaasCMS.adapter.del('Category', cids);
+                }).done(function() {
+                    widgetMain.reload();                   
                 
                     $('#category-' + cid).fadeOut(100, function() {
                         $(this).remove();
                     });
-                }).fail(function(modelName, error) {
-                    // reload categories and reload main widget
                 });
                 
                 return false;
@@ -261,7 +317,23 @@
                         
                         var iid = $(this).data('id');
                         
-                        BaasCMS.adapter.delItem(patternName, iid, cid).done(function() {
+                        BaasCMS.adapter.del(patternName, iid).then(function() {
+                            return BaasCMS.adapter.count(patternName, {
+                                cache: 'no',
+                                where: {
+                                    category_id: cid
+                                }
+                            });
+                        }).then(function(count) {
+                            if ( _.isUndefined(count) ) {
+                                return;
+                            }
+
+                            return BaasCMS.adapter.save('Category', {
+                                id: cid,
+                                count: count
+                            });
+                        }).done(function() {
                             widgetCategories.load();
                             
                             $('#item' + _.str.dasherize(patternName) + '-' + iid).fadeOut(100, function() {
@@ -589,7 +661,7 @@
                 },
                 onSelect: function(file) {
                     if (!file.shared) {
-                        alert('Do not forget to share this file on Google Drive!');
+                        BaasCMS.message('Do not forget to share this file on Google Drive!', 'info');
                     }
                     
                     var $context = $this.parent(),

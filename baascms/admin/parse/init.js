@@ -1,5 +1,5 @@
 /**
- * Init admin panel BaasCMS Parse
+ * Init BaasCMS Parse Admin Panel
  * Copyright (c) 2014 Artod gartod@gmail.com
 */
 
@@ -11,8 +11,8 @@
     
         var $formKeys = $context.find('form:eq(0)');    
     
-        var appid = BaasCMS.cookie.get('appid'),
-            jskey = BaasCMS.cookie.get('jskey'),
+        var appid = BaasCMS.Cookie.get('appid'),
+            jskey = BaasCMS.Cookie.get('jskey'),
             $appid = $formKeys.find('input[name="appid"]').val(appid),
             $jskey = $formKeys.find('input[name="jskey"]').val(jskey);
 
@@ -20,14 +20,21 @@
             var appid = $appid.val(),
                 jskey = $jskey.val();
 
-            BaasCMS.cookie.set('appid', appid);
-            BaasCMS.cookie.set('jskey', jskey);
+            BaasCMS.Cookie.set('appid', appid);
+            BaasCMS.Cookie.set('jskey', jskey);
             
-            window.location.hash = '#/baascms/category/add';
+            window.location.hash = '/baascms/pattern/add';
             window.location.reload();
             
             return false
         });        
+        
+        if (!appid || !jskey) {
+            $('#protect-your-data').hide();
+            $('#logged-in').hide();
+            
+            return;
+        }
         
         var $formSignUp = $context.find('form:eq(1)');
         
@@ -89,7 +96,6 @@
         });            
             
         var $formLogIn = $context.find('form:eq(2)');
-        
         if ( Parse.User.current() ) {
             $formLogIn.hide().parent().find('p[data-marker="log-out"]').show().html( $('#logged-in').html() );
         }
@@ -122,14 +128,14 @@
         return false;
     };
     
-    var appid = BaasCMS.cookie.get('appid'),
-        jskey = BaasCMS.cookie.get('jskey');
+    var appid = BaasCMS.Cookie.get('appid'),
+        jskey = BaasCMS.Cookie.get('jskey');
 
     if (!appid || !jskey) {
         $(function() {
             BaasCMS.loadHomePage();
         });
-        
+
         return;
     }
 
@@ -143,7 +149,9 @@
         if ( !Parse.User.current() ) {
             BaasCMS.loadHomePage();
         } else {
-            $('#logged-in').html('Logged in as <strong>' + Parse.User.current().get('username') + '</strong> <a href="#" data-marker="logout" title="Log out"><span class="glyphicon glyphicon-log-out"></span></a>');
+            $('#logged-in').html( _.template( $('#template-baascms-logged').html(), {
+                username: Parse.User.current().get('username')
+            } ) );
             
             $(document).on('click', 'a[data-marker="logout"]', function() {
                 Parse.User.logOut();
