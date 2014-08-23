@@ -315,6 +315,10 @@
                     $('a[data-marker="delete"]', this.$el).on('click', function() {
                         if (BaasCMS.adapter.busy) return false;
                         
+                        if ( !confirm('Are you sure?') ) {
+                            return false;
+                        }
+                
                         var iid = $(this).data('id');
                         
                         BaasCMS.adapter.del(patternName, iid).then(function() {
@@ -586,6 +590,10 @@
                     
                     $('a[data-marker="delete"]', self.$el).on('click', function(e) {
                         if (BaasCMS.adapter.busy) return false;
+                        
+                        if ( !confirm('Are you sure?') ) {
+                            return false;
+                        }
                         
                         onDelete($(this), e);
                         
