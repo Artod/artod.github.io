@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>BaasCMS</title>
+		
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta charset="utf-8" /> 
+		
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" />
+		
+		<style type="text/css">			
+			#catalog, #catalog li{
+				list-style: none; padding: 0px; margin: 0px;
+			}
+			
+			#catalog {
+				margin: 20px 0px 0px 0px
+			}
+			
+			#catalog li{
+				padding: 5px 0px 5px 0px;
+			}
+
+			#catalog li.active {
+				font-weight:bold;
+			}
+			
+			.breadcrumb {
+				background-color: inherit;
+				padding-left:0px;
+			}
+						
+			/*
+			A custom Bootstrap 3.1 theme from http://bootply.com\
+
+			This CSS code should follow the 'bootstrap.css'
+			in your HTML file.
+
+			license: MIT
+			author: bootply.com
+			*/
+
+
+			.productsrow {
+			 -moz-column-width: 18em;
+			 -webkit-column-width: 18em;
+			 -moz-column-gap: 1em;
+			 -webkit-column-gap: 1em;
+			}
+			  
+			.menu-category {
+			 display: inline-block;
+			 margin-bottom:  0.25rem;
+			 padding:  1rem;
+			 width:  100%; 
+			}
+
+			.product-image {
+			 width: 100%;
+			}
+
+			.product {
+			 padding-top:22px;  
+			}
+
+			.btn-product {
+			 background-color:#222;
+			 color:#eee;
+			 border-radius:0;
+			}
+
+			.yellow {
+			 color:yellow;
+			 text-shadow:#ccc 1px 1px 0;
+			}
+
+			/* end custom CSS */
+		</style>
+		
+		<!-- BaasCMS START -->
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.3/underscore.string.min.js"></script>
+		<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/path.js/0.8.4/path.min.js"></script>		
+		<script src="//www.parsecdn.com/js/parse-1.2.19.min.js"></script>		
+		<script src="//rawgit.com/Artod/baascms/master/src/baascms.js"></script>
+		<script src="//rawgit.com/Artod/baascms/master/src/baascms-adapter-parse.js"></script>
+
+		<script>
+			Parse.initialize('nM7P7NnFA95CK1WrqWOf9wa3mskctaTOdk9vYflj', '0zHfA9FG8L1xR699qmFXjxkZ1pDxgml0MWZMpqJG');
+			
+			BaasCMS.init({
+				baas: 'Parse'
+			});			
+		</script>
+		<!-- BaasCMS END -->
+		
+		
+		<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet" />
+		<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.js"></script>	
+		
+   </head>
+    <body>
+		<div class="container">
+			
+			<nav class="navbar navbar-default">
+				<div class="container-fluid">
+					<div class="navbar-header">
+						<a href="#" class="navbar-brand">BaasCMS Demo</a>
+					</div>
+					
+					<ul class="nav navbar-nav" id="menu"></ul>	
+					<script>
+						new BaasCMS.widgets.Categories({
+							elementSelector: '#menu',
+							template: 'template-menu-element',
+							afterQuery: function(data) {
+								data.categories = _.where(data.categories, {place: 'menu'});
+							},
+							onRoute: function(route) {
+								this.$el.find('li').removeClass('active');
+								$('#category-' + route.params['cid']).addClass('active');
+							}
+						});
+					</script>
+				</div>
+			</nav>
+		
+			<div class="row">
+				<div class="col-sm-3">	
+
+					<h4>Store</h4>
+					
+					<ul id="catalog"></ul>
+					<script>
+						new BaasCMS.widgets.Categories({
+							elementSelector: '#catalog',
+							template: 'template-catalog-element',				
+							afterQuery: function(data) {
+								data.categories = _.where(data.categories, {place: 'catalog'});
+							},
+							onRoute: function(route) {
+								this.$el.find('li').removeClass('active');
+								$('#category-' + route.params['cid']).addClass('active');
+							}
+						});
+					</script>
+					
+				</div>
+
+				<div class="col-sm-9">
+				
+					<div id="breadcrumbs"></div>
+					<script>
+						new BaasCMS.widgets.Breadcrumbs({
+							elementSelector: '#breadcrumbs'
+						});
+					</script>
+					
+					<div id="main"></div>
+					<script>
+						new BaasCMS.widgets.Main({
+							elementSelector: '#main',
+							itemsOpts: {
+								Product: {
+									limit: 3
+								},
+								Portfolio: {									
+									sort: '-order',
+									limit: 3,
+									afterRender: function() {
+										this.$el.find('a[rel="fancybox-portfolio"]').fancybox({ //fancybox plugin http://fancyapps.com/fancybox/
+											type: 'image'
+										});										
+										
+										/* example with button "Load More" instead paging */										
+										var self = this, //"this" is instance of the class BaasCMS.widgets.Items for the pattern Portfolio
+											$more = this.$el.find('button[data-marker="portfolio-more"]'),
+											$container = this.$el.find('div[data-marker="portfolio-list"]');
+										
+										$more.on('click', function() {
+											if (BaasCMS.adapter.busy) return false; //to avoid double-click
+											
+											$more.text('wait...');
+											
+											var page = parseInt( $more.data('page') );
+
+											self.opts.skip = page * self.opts.limit;
+											
+											self.get().done(function(data) {	
+												var elements = self.render(data, 'el'); //because of second param "el", method just returns html without placing it in the self.$el
+												
+												if (elements) {
+													$container.append(elements);
+													$more.text('Load More').data('page', page + 1); //increase page value										
+												} else {
+													$more.hide();
+												}
+											});		
+											
+											return false
+										});										
+									}
+								}
+							}
+						});
+					</script>
+					
+				</div>
+			</div>
+		</div>
+	
+		<div id="baascms-loader" style="display:none; position:fixed; top:20px; left:50%; margin-left:-30px; font-weight:bold;">Loading...</div>
+		
+		<div id="baascms-messages" style="display:none; position:fixed; top:50px; left:50%; margin-left:-200px; width:400px; font-weight:bold;"></div>
+		
+		
+		<script id="template-baascms-message" type="text/template">
+			<div class="alert alert-<%= type %> alert-dismissible"><%= message %></div>
+		</script>
+		
+		
+		<!-- Template for home page -->
+		<script id="template-baascms-home" type="text/template">
+			<div class="page-header">
+				<h1>BaasCMS Demo</h1>
+			</div>
+			
+			<p>Demo site is powered by <a href="https://github.com/Artod/baascms">BaasCMS</a>.</p>
+			<p>You can see the admin panel for this demo at <a href="https://artod.github.io/baascms/admin/parse/#/">https://artod.github.io/baascms/admin/parse/#/</a> with the keys below:</p>
+			<ul>
+				<li><strong>Application ID:</strong> nM7P7NnFA95CK1WrqWOf9wa3mskctaTOdk9vYflj</li>
+				<li><strong>Javascript Key:</strong> 0zHfA9FG8L1xR699qmFXjxkZ1pDxgml0MWZMpqJG</li>
+			</ul>
+			
+			<div id="sale"></div>
+			<<%= "script" %>>
+				new BaasCMS.widgets.Items({
+					elementSelector: '#sale',
+					template: 'template-product-sale-element',
+					templateWrap: 'template-product-sale-wrap',
+					patternName: 'Product',
+					cache: 'yes',
+					select: ['name', 'category_id', 'cost', 'preview'],
+					where: {
+						sale: 'yes'
+					}					
+				});
+			</<%= "script" %>>
+		</script>
+		
+		
+		<script id="template-baascms-categories-wrap" type="text/template">		
+			<%= htmlElements %>
+		</script>
+
+		
+		<script id="template-catalog-element" type="text/template">
+			<li id="category-<%= category.id %>"<%= routeParams["cid"] === category.id ? " class='active'" : "" %>>
+				<a href="#/baascms/category/<%= category.id %>"><%= _.escape(category.name) %></a>
+				
+				<%= category.count || category.count == 0 ? "(" + category.count + ")" : "" %>
+			</li>
+		</script>
+		
+		
+		<script id="template-menu-element" type="text/template">
+			<li id="category-<%= category.id %>"<%= routeParams["cid"] === category.id ? " class='active'" : "" %>>
+				<a href="#/baascms/category/<%= category.id %>"><%= _.escape(category.name) %></a>
+			</li>
+		</script>	
+		
+		
+		<script id="template-baascms-category" type="text/template">
+			<div class="page-header">
+				<h1><%= category.name %></h1>
+			</div>
+			
+			<% if (data.children.length) { %>				
+				<ul>
+					<% _.each(data.children, function(child) { %>
+						<li>
+							<a href="#/baascms/category/<%= child.id %>"><%= _.escape(child.name) %></a>
+						</li>
+					<% }) %>
+				</ul>
+			<% } %>
+			
+			<img src="<%= category.icon %>" alt="" />
+			
+			<p><%= category.description %></p>
+					
+			<%= category.article %>		
+		</script>
+		
+		
+		<script id="template-store-main-category" type="text/template">
+			<div class="page-header">
+				<h1><%= category.name %></h1>
+			</div>
+			
+			<p><%= category.description %></p>
+					
+			<%= category.article %>
+			
+			<div class="productsrow">			
+				<% _.each(data.children, function(child) { %>							
+					<div class="product menu-category">				
+						<div class="product-image">
+							<a href="#/baascms/category/<%= child.id %>">
+								<img src="<%= child.icon %>" alt="" />
+							</a>
+						</div>				
+						<a href="#/baascms/category/<%= child.id %>"><%= _.escape(child.name) %></a>
+						<p><%= child.description %></p>
+					</div>
+				<% }) %>
+			</div>				
+		</script>
+		
+
+		<script id="template-product-sale-wrap" type="text/template">
+			<div class="productsrow">
+				<%= htmlElements %>
+			</div>
+		</script>
+		
+		
+		<script id="template-product-sale-element" type="text/template">
+			<div class="product menu-category">
+				<div class="menu-category-name list-group-item">					
+					<% var category = _.findWhere(data.categories, {id: item.category_id}); %>
+					<%= category ? category["name"] : "" %>	
+					
+					<span class="label label-danger">sale</span>							
+				</div>			
+				<div class="product-image">
+					<a href="#/baascms/category/<%= item.category_id %>/item/<%= item.id %>">
+						<img src="<%= item.preview %>" class="product-image menu-item list-group-item">
+					</a>
+				</div>				
+				<a class="menu-item list-group-item" href="#/baascms/category/<%= item.category_id %>/item/<%= item.id %>">
+					<%= item.name %><span class="badge">$<%= item.cost %></span>
+				</a>
+			</div>
+		</script>
+		
+		
+		<script id="template-baascms-product-items-wrap" type="text/template">
+			<div class="page-header">
+				<h1><%= data.category.name %></h1>
+			</div>
+			
+			<div class="productsrow">
+				<%= htmlElements %>
+			</div>
+
+			<% if (data.pages > 1) { %>
+				<ul class="pagination">	
+					<% for (var i = 1; data.pages >= i; i++) { %>
+						<li<%= data.page == i ? " class='active'" : "" %>>						
+							<a href="#/baascms/category/<%= data.category.id %>/page/<%= i %>/sort/<%= opts.sort %>"><%= i %></a>
+						</li>
+					<% } %>
+				</ul>
+			<% } %>
+		</script>		
+
+		
+		<script id="template-baascms-product-items-element" type="text/template">			
+			<div class="product menu-category">				
+				<div class="product-image">
+					<a href="#/baascms/category/<%= item.category_id %>/item/<%= item.id %>">
+						<img src="<%= item.preview %>" class="product-image menu-item list-group-item">
+					</a>
+				</div>				
+				<a class="menu-item list-group-item" href="#/baascms/category/<%= item.category_id %>/item/<%= item.id %>">	
+					<%= item.name %>
+					
+					<% if (item.sale === "yes") { %>
+						<span class="label label-danger">sale</span>
+					<% } %>
+					
+					<span class="badge">$<%= item.cost %></span>
+				</a>
+			</div>
+		</script>	
+
+		
+		<script id="template-baascms-product-item" type="text/template">
+			<div class="page-header">
+				<h1>					
+					<%= item.name %>
+					<% if (item.sale === "yes") { %>
+						<sup><span class="label label-danger">sale</span></sup>						
+					<% } %>
+				</h1>
+			</div>
+			
+			<div class="row">
+				<div class="col-sm-6">
+					<img src="<%= item.icon %>" alt="" style="width:100%;" />
+					<%= item.description %>
+				</div>
+				<div class="col-sm-5 col-sm-offset-1">
+					<h2>Price: $<%= item.cost %></h2>
+					
+					<form action="https://merchant.webmoney.ru/lmi/payment.asp" method="POST">
+						<input type="hidden" name="LMI_PAYMENT_AMOUNT" value="<%= item.cost %>">
+						<input type="hidden" name="LMI_PAYEE_PURSE" value="Z223453348790">
+						<input type="submit" class="wmbtn" style="font-famaly:Verdana, Helvetica, sans-serif!important;padding:0 10px;height:30px;font-size:12px!important;border:1px solid #538ec1!important;background:#a4cef4!important;color:#fff!important;" value="Webmoney <%= item.cost %>WMZ">
+					</form>
+					
+					<br />
+					
+					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+						<input type="hidden" name="cmd" value="_s-xclick">
+						<input type="hidden" name="hosted_button_id" value="B4P6DDN5JFVFQ">
+						<input type="image" src="https://www.paypalobjects.com/en_US/RU/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+						<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+					</form>
+				</div>
+			</div>
+		</script>
+		
+		
+		<script id="template-baascms-portfolio-items-wrap" type="text/template">
+			<div class="page-header">
+				<h1><%= data.category.name %></h1>
+			</div>
+			
+			<div class="productsrow" data-marker="portfolio-list">
+				<%= htmlElements %>
+			</div>
+
+			<p class="text-center">
+				<button class="btn btn-primary" data-page="1" data-marker="portfolio-more">Load More</button>
+			</p>			
+		</script>		
+
+		
+		<script id="template-baascms-portfolio-items-element" type="text/template">			
+			<div class="product menu-category">			
+				<div class="product-image">
+					<a href="<%= item.photo %>" title="<%= item.name %>" rel="fancybox-portfolio">
+						<img src="<%= item.preview %>" class="product-image menu-item list-group-item">
+					</a>
+				</div>
+				<a href="#/baascms/category/hKZqFY4ocQ/item/HpsXxgQwHb" class="menu-item list-group-item">	
+					<%= item.name %>
+				</a>
+			</div>
+		</script>
+		
+		
+		<script id="template-baascms-breadcrumbs-wrap" type="text/template">
+			<% if (htmlElements) { %>
+				<ol class="breadcrumb">
+					<li><a href="#">Home</a></li>
+					<%= htmlElements %>
+				</ol>
+			<% } %>
+		</script>
+		
+		
+		<script id="template-baascms-breadcrumbs-element" type="text/template">
+			<li>
+				<a href="#/baascms/category/<%= category.id %>"><%= _.escape(category.name) %></a>
+			</li>	
+		</script>
+
+		
+    </body>
+</html>
